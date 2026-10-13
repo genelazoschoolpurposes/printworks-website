@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PrintWorks | Printing Services</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
+  <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="#home"><span class="dots"><i></i><i></i><i></i></span>PrintWorks</a>
+    <nav>
+      <a href="#services">Services</a>
+      <a href="#order">Order</a>
+      <a href="#track">Track</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-text">
+        <h1>Print it right. Pick it up today.</h1>
+        <p>Documents, tarpaulins, photos and business cards for students, offices and small businesses. Get your price before you order.</p>
+        <a class="btn" href="#services">See services</a>
+      </div>
+
+      <form id="calc-form" class="receipt" onsubmit="return false">
+        <h2>Quick quote</h2>
+        <label>Service <select id="calc-service"></select></label>
+        <label>Quantity <input id="calc-qty" type="number" min="1" value="10"></label>
+        <label class="check"><input id="calc-rush" type="checkbox"> Rush (ready in 1 hour, +20%)</label>
+        <dl id="calc-out"></dl>
+        <button type="button" id="calc-add" class="btn small">Add this to my order</button>
+        <p id="calc-msg" class="msg" role="status"></p>
+      </form>
+    </section>
+
+    <section id="services">
+      <h2>Services and prices</h2>
+      <input id="search" type="search" placeholder="Search services, e.g. tarpaulin" aria-label="Search services">
+      <div id="service-grid" class="grid"></div>
+    </section>
+
+    <section id="order" class="two-col">
+      <div>
+        <h2>Your order</h2>
+        <table class="cart">
+          <thead><tr><th>Item</th><th>Qty</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="cart-body"></tbody>
+        </table>
+        <dl id="cart-out"></dl>
+        <p class="note">10% off when your subtotal reaches ₱500.</p>
+      </div>
+
+      <form id="order-form" novalidate>
+        <h2>Place order</h2>
+        <label>Full name <input id="name" type="text" autocomplete="name"></label>
+        <label>Mobile number <input id="phone" type="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
+        <label>Claim method
+          <select id="method"><option>Pick up in store</option><option>Delivery</option></select>
+        </label>
+        <label class="check"><input id="rush" type="checkbox"> Rush order (+20%)</label>
+        <button class="btn" type="submit">Place order</button>
+        <p id="order-msg" class="msg" role="status"></p>
+      </form>
+    </section>
+
+    <section id="track" class="two-col">
+      <div>
+        <h2>Track your order</h2>
+        <p>Enter the reference number you received when you placed your order.</p>
+      </div>
+      <div>
+        <label>Reference number <input id="ref" type="text" placeholder="PW-1234"></label>
+        <button type="button" id="track-btn" class="btn small">Check status</button>
+        <p id="track-msg" class="msg" role="status"></p>
+      </div>
+    </section>
+
+    <section id="contact" class="two-col">
+      <div>
+        <h2>Contact us</h2>
+        <p>Open Monday to Saturday, 8:00 AM to 6:00 PM.</p>
+      </div>
+      <form id="contact-form" novalidate>
+        <label>Your email <input id="c-email" type="email"></label>
+        <label>Message <textarea id="c-msg" rows="3"></textarea></label>
+        <button class="btn small" type="submit">Send message</button>
+        <p id="contact-msg" class="msg" role="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer>PrintWorks &middot; Event-Driven Programming final project &middot; Built with PyScript</footer>
+
+  <script type="py" src="./main.py"></script>
+</body>
+</html>
