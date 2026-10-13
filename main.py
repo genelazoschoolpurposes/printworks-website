@@ -11,6 +11,66 @@ Events used:
 import time
 import random
 import asyncio
+# ---------- Automatic promo ads ----------
+ADS = [
+    {"tone": "cyan",    "title": "Student special",   "text": "Thesis and reports, printed clean and ready to bind.", "sid": "bw",    "qty": 100},
+    {"tone": "magenta", "title": "Event banners",     "text": "A 3x4 ft tarpaulin for your birthday, fiesta or shop opening.", "sid": "tarp",  "qty": 12},
+    {"tone": "yellow",  "title": "Look professional", "text": "Business cards, ready in a day for your small business.", "sid": "card",  "qty": 1},
+    {"tone": "ink",     "title": "Keep the memories", "text": "Glossy or matte photo prints for frames and gifts.", "sid": "photo", "qty": 20},
+]
+AD_SECONDS = 4
+ad_index = 0
+ad_paused = False
+
+
+def render_ad():
+    ad = ADS[ad_index]
+    s = service(ad["sid"])
+    el("ad-banner").setAttribute("data-tone", ad["tone"])
+    el("ad-slide").innerHTML = (
+        f"<h2>{ad['title']}</h2><p>{ad['text']}</p>"
+        f"<button class='btn' data-ad='{ad_index}'>Add {ad['qty']} {s['unit']} for {money(s['price'] * ad['qty'])}</button>"
+    )
+    el("ad-dots").innerHTML = "".join(
+        f"<button data-dot='{i}' class='{'on' if i == ad_index else ''}' aria-label='Show ad {i + 1}'></button>"
+        for i in range(len(ADS))
+    )
+
+
+async def ad_loop():
+    global ad_index
+    while True:
+        await asyncio.sleep(AD_SECONDS)
+        if not ad_paused:
+            ad_index = (ad_index + 1) % len(ADS)
+            render_ad()
+
+
+@when("mouseenter", "#ad-banner")
+def on_ad_pause(event):
+    global ad_paused
+    ad_paused = True
+
+
+@when("mouseleave", "#ad-banner")
+def on_ad_resume(event):
+    global ad_paused
+    ad_paused = False
+
+
+@when("click", "#ad-banner")
+def on_ad_click(event):
+    global ad_index
+    dot = event.target.closest("button[data-dot]")
+    if dot is not None:
+        ad_index = int(dot.dataset.dot)
+        render_ad()
+        return
+    button = event.target.closest("button[data-ad]")
+    if button is not None:
+        ad = ADS[int(button.dataset.ad)]
+        add_to_cart(ad["sid"], ad["qty"])
+        show_msg("ad-msg", f"Added {ad['qty']} x {service(ad['sid'])['name']} to your order.")
 from html import escape
 from pyscript import document, when, window
 
