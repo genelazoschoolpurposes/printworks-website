@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <p id="py-status">Loading interactive features... If this message stays, open the browser console (F12) to see the error.</p>
   <header class="top">
     <a class="logo" href="#home"><span class="dots"><i></i><i></i><i></i></span>PrintWorks</a>
     <nav>
@@ -41,6 +42,14 @@
       </form>
     </section>
 
+    <section id="ads" aria-label="Promotions">
+      <div id="ad-banner" data-tone="cyan">
+        <div id="ad-slide"></div>
+        <div id="ad-dots"></div>
+      </div>
+      <p id="ad-msg" class="msg" role="status"></p>
+    </section>
+
     <section id="services">
       <h2>Services and prices</h2>
       <input id="search" type="search" placeholder="Search services, e.g. tarpaulin" aria-label="Search services">
@@ -62,6 +71,14 @@
         <h2>Place order</h2>
         <label>Full name <input id="name" type="text" autocomplete="name"></label>
         <label>Mobile number <input id="phone" type="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
+        <label>Files to print (PDF, Word, JPG or PNG, up to 10 MB)
+          <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        </label>
+        <img id="preview" alt="Preview of your file" hidden>
+        <p id="file-msg" class="msg" role="status"></p>
+        <label>Printing instructions
+          <textarea id="notes" rows="2" placeholder="Example: A4, double-sided, 2 copies"></textarea>
+        </label>
         <label>Claim method
           <select id="method"><option>Pick up in store</option><option>Delivery</option></select>
         </label>
@@ -87,10 +104,15 @@
       <div>
         <h2>Contact us</h2>
         <p>Open Monday to Saturday, 8:00 AM to 6:00 PM.</p>
+        <p>Send your files to <strong id="send-email"></strong> and include your reference number.</p>
       </div>
       <form id="contact-form" novalidate>
         <label>Your email <input id="c-email" type="email"></label>
-        <label>Message <textarea id="c-msg" rows="3"></textarea></label>
+        <label>Message <textarea id="c-msg" rows="3" placeholder="Tell us what you want to print"></textarea></label>
+        <label>Attach what you want to print (PDF, Word, JPG or PNG, up to 10 MB)
+          <input id="c-file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        </label>
+        <p id="c-file-msg" class="msg" role="status"></p>
         <button class="btn small" type="submit">Send message</button>
         <p id="contact-msg" class="msg" role="status"></p>
       </form>
