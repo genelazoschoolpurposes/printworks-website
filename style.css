@@ -101,3 +101,30 @@ footer { padding: 2rem clamp(1rem, 5vw, 4rem); color: var(--muted); font-size: .
   .hero, .two-col { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* Automatic promo banner */
+#ads { padding: 2rem 0; }
+#ad-banner { padding: 1.5rem 1.8rem; border: 2px solid var(--ink); color: #fff; min-height: 190px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; }
+#ad-banner[data-tone="cyan"] { background: var(--cyan); }
+#ad-banner[data-tone="magenta"] { background: var(--magenta); }
+#ad-banner[data-tone="yellow"] { background: var(--yellow); color: var(--ink); }
+#ad-banner[data-tone="ink"] { background: var(--ink); }
+#ad-slide h2 { font-size: clamp(1.5rem, 4vw, 2.3rem); margin: 0 0 .4rem; }
+#ad-slide p { margin: 0 0 1rem; }
+#ad-slide .btn { background: #fff; color: var(--ink); border-color: #fff; }
+#ad-slide .btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+#ad-dots { display: flex; gap: .5rem; }
+#ad-dots button { width: 14px; height: 14px; padding: 0; border-radius: 50%; border: 2px solid currentColor; background: transparent; cursor: pointer; }
+#ad-dots button.on { background: currentColor; }
+
+/* Loading status and file preview */
+#py-status { margin: 0; padding: .6rem clamp(1rem, 5vw, 4rem); background: var(--yellow); color: var(--ink); font-size: .9rem; }
+#preview { max-width: 200px; max-height: 160px; border: 1px solid var(--line); margin-bottom: .6rem; }
+
+/* File picker styled as a button */
+input[type="file"] { padding: .35rem; }
+input[type="file"]::file-selector-button {
+  background: var(--ink); color: #fff; border: 0; border-radius: 4px;
+  padding: .45rem .9rem; margin-right: .8rem; font: inherit; font-weight: 600; cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background: var(--magenta); }
