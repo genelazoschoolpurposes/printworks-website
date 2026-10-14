@@ -44,8 +44,18 @@
 
     <section id="ads" aria-label="Promotions">
       <div id="ad-banner" data-tone="cyan">
-        <div id="ad-slide"></div>
-        <div id="ad-dots"></div>
+        <small class="ad-tag">Ad</small>
+        <div id="ad-slide">
+          <h2>Student special</h2>
+          <p>Thesis and reports, printed clean and ready to bind.</p>
+          <button class="btn" data-ad="0">Add 100 page for ₱200.00</button>
+        </div>
+        <div id="ad-dots">
+          <button data-dot="0" class="on" aria-label="Show ad 1"></button>
+          <button data-dot="1" aria-label="Show ad 2"></button>
+          <button data-dot="2" aria-label="Show ad 3"></button>
+          <button data-dot="3" aria-label="Show ad 4"></button>
+        </div>
       </div>
       <p id="ad-msg" class="msg" role="status"></p>
     </section>
@@ -54,6 +64,23 @@
       <h2>Services and prices</h2>
       <input id="search" type="search" placeholder="Search services, e.g. tarpaulin" aria-label="Search services">
       <div id="service-grid" class="grid"></div>
+    </section>
+
+    <section id="deals" aria-label="Deals">
+      <div class="deals">
+        <a class="promo magenta" href="#order">
+          <small class="tag">Ad</small>
+          <strong>10% off when your order reaches ₱500</strong>
+          <p>Documents, tarpaulins, photos and business cards.</p>
+          <span class="go">Order now</span>
+        </a>
+        <a class="promo ink" href="#order">
+          <small class="tag">Ad</small>
+          <strong>Need it fast? Ready in 1 hour</strong>
+          <p>Choose rush at checkout (+20%).</p>
+          <span class="go">Try rush</span>
+        </a>
+      </div>
     </section>
 
     <section id="order" class="two-col">
@@ -120,6 +147,11 @@
   </main>
 
   <footer>PrintWorks &middot; Event-Driven Programming final project &middot; Built with PyScript</footer>
+
+  <div id="promo-bar">
+    <span>Open Monday to Saturday, 8:00 AM to 6:00 PM. <a href="#order">Place your order</a></span>
+    <button type="button" id="promo-close" aria-label="Close ad">&times;</button>
+  </div>
 
   <script type="py" src="./main.py"></script>
 </body>
