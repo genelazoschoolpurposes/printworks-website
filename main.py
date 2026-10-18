@@ -250,7 +250,10 @@ def on_remove_file_click(event):
     button = event.target.closest("button[data-remove-file]")
     if button is None:
         return
-    idx = int(button.dataset.remove_file)
+    try:
+        idx = int(button.getAttribute("data-remove-file"))
+    except (ValueError, TypeError):
+        return
     if 0 <= idx < len(selected_files):
         removed = selected_files.pop(idx)
         render_file_list()
