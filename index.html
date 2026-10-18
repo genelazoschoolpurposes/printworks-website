@@ -98,11 +98,18 @@
         <h2>Place order</h2>
         <label>Full name <input id="name" type="text" autocomplete="name"></label>
         <label>Mobile number <input id="phone" type="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
+        
+        <!-- Updated File Input to allow multiple selection -->
         <label>Files to print (PDF, Word, JPG or PNG, up to 10 MB)
-          <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+          <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
         </label>
+        
+        <!-- Container where the list of attached files & remove buttons will appear -->
+        <ul id="file-list" class="file-list" style="list-style: none; padding: 0; margin: 8px 0;"></ul>
+
         <img id="preview" alt="Preview of your file" hidden>
         <p id="file-msg" class="msg" role="status"></p>
+        
         <label>Printing instructions
           <textarea id="notes" rows="2" placeholder="Example: A4, double-sided, 2 copies"></textarea>
         </label>

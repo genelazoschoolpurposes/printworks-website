@@ -5,8 +5,8 @@ Events used:
   timer (asyncio) -> automatic promo ads rotate every few seconds
   mouseenter/leave-> hovering pauses the ads
   click           -> close button hides the bottom promo bar
-  change          -> file picker validates and previews the file to print
-  click           -> add to order, remove item, track order (event delegation)
+  change          -> file picker validates and appends files to print
+  click           -> add to order, remove item, remove attached file, track order
   submit          -> order form and contact form with validation
 """
 import time
@@ -26,15 +26,16 @@ SERVICES = [
     {"id": "lam",   "name": "Lamination",                 "unit": "sheet", "price": 20,  "desc": "IDs, certificates and posters"},
     {"id": "bind",  "name": "Spiral Binding",             "unit": "book",  "price": 45,  "desc": "Clear cover and back page included"},
 ]
-CONTACT_EMAIL = "printworks@example.com"   # CHANGE THIS to your group's real email or Messenger
+CONTACT_EMAIL = "printworks@example.com"
 MAX_FILE_MB = 10
 ALLOWED_EXT = (".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png")
 DISCOUNT_MIN = 500      # subtotal that unlocks the discount
 DISCOUNT_RATE = 0.10
 RUSH_RATE = 0.20
 
-cart = {}     # service id -> quantity
-orders = {}   # reference number -> order info
+cart = {}          # service id -> quantity
+orders = {}        # reference number -> order info
+selected_files = [] # list of attached file JS File objects
 
 
 # ---------- Helpers ----------
@@ -70,8 +71,9 @@ def breakdown_html(subtotal, rush):
 
 def show_msg(element_id, text, ok=True):
     box = el(element_id)
-    box.textContent = text
-    box.className = "msg ok" if ok else "msg error"
+    if box:
+        box.textContent = text
+        box.className = "msg ok" if ok else "msg error"
 
 
 def read_qty(value):
@@ -138,6 +140,27 @@ def add_to_cart(sid, qty):
     render_cart()
 
 
+def render_file_list():
+    """Renders all attached files with individual Remove buttons."""
+    list_el = el("file-list")
+    if not list_el:
+        return
+    
+    if not selected_files:
+        list_el.innerHTML = ""
+        return
+        
+    items = ""
+    for idx, f in enumerate(selected_files):
+        items += f"""
+        <li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 4px 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
+            <span>📄 <strong>{escape(str(f.name))}</strong> ({f.size / 1024:,.0f} KB)</span>
+            <button type="button" class="link" data-remove-file="{idx}" style="color: #c00; font-weight: bold; cursor: pointer; border: none; background: none;">Remove</button>
+        </li>
+        """
+    list_el.innerHTML = items
+
+
 # ---------- Events ----------
 @when("input", "#calc-form")
 def on_calc_change(event):
@@ -187,54 +210,57 @@ def on_rush_toggle(event):
 
 
 # ---------- File to print ----------
-preview_url = None
-
-
-def get_file(input_id="file"):
-    files = el(input_id).files
-    return files.item(0) if files.length > 0 else None
-
-
 def validate_file(f):
     """Return a problem message, or None if the file is fine."""
     if not str(f.name).lower().endswith(ALLOWED_EXT):
-        return "That file type isn't supported. Use PDF, Word, JPG or PNG."
+        return f"File '{f.name}' type isn't supported. Use PDF, Word, JPG or PNG."
     if f.size > MAX_FILE_MB * 1024 * 1024:
-        return f"That file is {f.size / 1024 / 1024:.1f} MB. The limit is {MAX_FILE_MB} MB."
+        return f"File '{f.name}' is {f.size / 1024 / 1024:.1f} MB. The limit is {MAX_FILE_MB} MB."
     return None
-
-
-def clear_preview():
-    global preview_url
-    el("preview").hidden = True
-    if preview_url:
-        window.URL.revokeObjectURL(preview_url)
-        preview_url = None
 
 
 @when("change", "#file")
 def on_file_change(event):
-    global preview_url
-    clear_preview()
-    f = get_file()
-    if f is None:
-        show_msg("file-msg", "")
+    files = el("file").files
+    if files.length == 0:
         return
-    problem = validate_file(f)
-    if problem:
-        show_msg("file-msg", problem, ok=False)
-        el("file").value = ""
+    
+    problems = []
+    added_count = 0
+    for i in range(files.length):
+        f = files.item(i)
+        problem = validate_file(f)
+        if problem:
+            problems.append(problem)
+        else:
+            selected_files.append(f)
+            added_count += 1
+
+    render_file_list()
+    el("file").value = ""  # clear input so user can pick more if needed
+
+    if problems:
+        show_msg("file-msg", " ".join(problems), ok=False)
+    else:
+        show_msg("file-msg", f"Added {added_count} file(s).")
+
+
+@when("click", "#file-list")
+def on_remove_file_click(event):
+    button = event.target.closest("button[data-remove-file]")
+    if button is None:
         return
-    show_msg("file-msg", f"Attached: {f.name} ({f.size / 1024:,.0f} KB)")
-    if str(f.type).startswith("image/"):
-        preview_url = window.URL.createObjectURL(f)
-        el("preview").src = preview_url
-        el("preview").hidden = False
+    idx = int(button.dataset.remove_file)
+    if 0 <= idx < len(selected_files):
+        removed = selected_files.pop(idx)
+        render_file_list()
+        show_msg("file-msg", f"Removed {removed.name}.")
 
 
 @when("change", "#c-file")
 def on_contact_file_change(event):
-    f = get_file("c-file")
+    files = el("c-file").files
+    f = files.item(0) if files.length > 0 else None
     if f is None:
         show_msg("c-file-msg", "")
         return
@@ -252,8 +278,6 @@ def on_order_submit(event):
     name = el("name").value.strip()
     phone = el("phone").value.strip()
     digits = "".join(ch for ch in phone if ch.isdigit())
-    f = get_file()
-    file_problem = validate_file(f) if f is not None else None
 
     if not cart:
         show_msg("order-msg", "Your order is empty. Add at least one service.", ok=False)
@@ -261,29 +285,38 @@ def on_order_submit(event):
         show_msg("order-msg", "Enter your full name.", ok=False)
     elif len(digits) < 10 or len(digits) > 12:
         show_msg("order-msg", "Enter a valid mobile number, for example 09171234567.", ok=False)
-    elif file_problem:
-        show_msg("order-msg", file_problem, ok=False)
     else:
         rush = el("rush").checked
         total = compute(cart_subtotal(), rush)[2]
         ref = f"PW-{random.randint(1000, 9999)}"
         while ref in orders:
             ref = f"PW-{random.randint(1000, 9999)}"
-        file_name = str(f.name) if f is not None else None
-        orders[ref] = {"name": name, "placed": time.time(), "rush": rush,
-                       "file": file_name, "notes": el("notes").value.strip()}
-        attached = f"File attached: {file_name}. " if file_name else ""
+        
+        file_names = [str(f.name) for f in selected_files]
+        orders[ref] = {
+            "name": name, 
+            "placed": time.time(), 
+            "rush": rush,
+            "files": file_names, 
+            "notes": el("notes").value.strip()
+        }
+        
+        attached = f"{len(file_names)} file(s) attached ({', '.join(file_names)}). " if file_names else "No files attached. "
         show_msg("order-msg",
                  f"Thank you, {name}! Order {ref} is received. Total: {money(total)}. "
                  f"{el('method').value}. {attached}"
-                 f"Send your file to {CONTACT_EMAIL} and include {ref}.")
+                 f"Send your files to {CONTACT_EMAIL} and include {ref}.")
+        
+        # Reset form & state
         cart.clear()
+        selected_files.clear()
+        render_file_list()
+        
         el("name").value = ""
         el("phone").value = ""
         el("rush").checked = False
         el("notes").value = ""
         el("file").value = ""
-        clear_preview()
         show_msg("file-msg", "")
         render_cart()
 
@@ -295,7 +328,6 @@ def on_track(event):
     if order is None:
         show_msg("track-msg", "No order found with that reference number. Check it and try again.", ok=False)
         return
-    # Simulated progress so the status changes while you demo the site.
     elapsed = time.time() - order["placed"]
     step = 10 if order["rush"] else 20
     if elapsed < step:
@@ -312,8 +344,10 @@ def on_contact_submit(event):
     event.preventDefault()
     email = el("c-email").value.strip()
     message = el("c-msg").value.strip()
-    f = get_file("c-file")
+    files = el("c-file").files
+    f = files.item(0) if files.length > 0 else None
     file_problem = validate_file(f) if f is not None else None
+    
     if "@" not in email or "." not in email.split("@")[-1]:
         show_msg("contact-msg", "Enter a valid email address.", ok=False)
     elif len(message) < 5:
@@ -405,6 +439,7 @@ try:
     render_services()
     render_calc()
     render_cart()
+    render_file_list()
     render_ad()
     asyncio.ensure_future(ad_loop())
     el("py-status").hidden = True
