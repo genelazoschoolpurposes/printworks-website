@@ -10,6 +10,13 @@
   <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
   <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Delivery fields and file previews (you can move this into style.css if you prefer) */
+    [hidden] { display: none !important; }
+    #delivery-fields { display: grid; gap: 1rem; }
+    .preview-list { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .preview-list img { max-height: 120px; max-width: 100%; border-radius: 6px; }
+  </style>
 </head>
 <body>
   <p id="py-status">Loading interactive features... If this message stays, open the browser console (F12) to see the error.</p>
@@ -98,17 +105,34 @@
         <h2>Place order</h2>
         <label>Full name <input id="name" type="text" autocomplete="name"></label>
         <label>Mobile number <input id="phone" type="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
-        <label>Files to print (PDF, Word, JPG or PNG, up to 10 MB)
-          <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        <label>Files to print (PDF, Word, JPG or PNG, up to 10 MB each, max 10 files)
+          <input id="file" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
         </label>
-        <img id="preview" alt="Preview of your file" hidden>
+        <div id="preview-list" class="preview-list" hidden></div>
         <p id="file-msg" class="msg" role="status"></p>
         <label>Printing instructions
           <textarea id="notes" rows="2" placeholder="Example: A4, double-sided, 2 copies"></textarea>
         </label>
         <label>Claim method
-          <select id="method"><option>Pick up in store</option><option>Delivery</option></select>
+          <select id="method">
+            <option>Pick up in store</option>
+            <option>Delivery</option>
+          </select>
         </label>
+
+        <!-- Shown only when Delivery is selected -->
+        <div id="delivery-fields" hidden>
+          <label>Delivery address
+            <textarea id="d-address" rows="2" placeholder="House/Unit no., Street, Barangay, City"></textarea>
+          </label>
+          <label>Preferred delivery date
+            <input id="d-date" type="date">
+          </label>
+          <label>Preferred delivery time
+            <input id="d-time" type="time">
+          </label>
+        </div>
+
         <label class="check"><input id="rush" type="checkbox"> Rush order (+20%)</label>
         <button class="btn" type="submit">Place order</button>
         <p id="order-msg" class="msg" role="status"></p>
@@ -136,8 +160,8 @@
       <form id="contact-form" novalidate>
         <label>Your email <input id="c-email" type="email"></label>
         <label>Message <textarea id="c-msg" rows="3" placeholder="Tell us what you want to print"></textarea></label>
-        <label>Attach what you want to print (PDF, Word, JPG or PNG, up to 10 MB)
-          <input id="c-file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        <label>Attach what you want to print (PDF, Word, JPG or PNG, up to 10 MB each, max 10 files)
+          <input id="c-file" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
         </label>
         <p id="c-file-msg" class="msg" role="status"></p>
         <button class="btn small" type="submit">Send message</button>
