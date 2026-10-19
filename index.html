@@ -103,4 +103,65 @@
         <p class="note">10% off when your subtotal reaches ₱500.</p>
       </div>
 
-      <form
+      <form id="order-form" novalidate>
+        <h2>Place order</h2>
+        <label>Full name <input id="name" type="text" autocomplete="name"></label>
+        <label>Mobile number <input id="phone" type="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
+        <label>Files to print (PDF, Word, JPG or PNG, up to 10 MB)
+          <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        </label>
+        <img id="preview" alt="Preview of your file" hidden>
+        <p id="file-msg" class="msg" role="status"></p>
+        <label>Printing instructions
+          <textarea id="notes" rows="2" placeholder="Example: A4, double-sided, 2 copies"></textarea>
+        </label>
+        <label>Claim method
+          <select id="method"><option>Pick up in store</option><option>Delivery</option></select>
+        </label>
+        <label class="check"><input id="rush" type="checkbox"> Rush order (+20%)</label>
+        <button class="btn" type="submit">Place order</button>
+        <p id="order-msg" class="msg" role="status"></p>
+      </form>
+    </section>
+
+    <section id="track" class="two-col">
+      <div>
+        <h2>Track your order</h2>
+        <p>Enter the reference number you received when you placed your order.</p>
+      </div>
+      <div>
+        <label>Reference number <input id="ref" type="text" placeholder="PW-1234"></label>
+        <button type="button" id="track-btn" class="btn small">Check status</button>
+        <p id="track-msg" class="msg" role="status"></p>
+      </div>
+    </section>
+
+    <section id="contact" class="two-col">
+      <div>
+        <h2>Contact us</h2>
+        <p>Open Monday to Saturday, 8:00 AM to 6:00 PM.</p>
+        <p>Send your files to <strong id="send-email"></strong> and include your reference number.</p>
+      </div>
+      <form id="contact-form" novalidate>
+        <label>Your email <input id="c-email" type="email"></label>
+        <label>Message <textarea id="c-msg" rows="3" placeholder="Tell us what you want to print"></textarea></label>
+        <label>Attach what you want to print (PDF, Word, JPG or PNG, up to 10 MB)
+          <input id="c-file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        </label>
+        <p id="c-file-msg" class="msg" role="status"></p>
+        <button class="btn small" type="submit">Send message</button>
+        <p id="contact-msg" class="msg" role="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer>PrintWorks &middot; Event-Driven Programming final project &middot; Built with PyScript</footer>
+
+  <div id="promo-bar">
+    <span>Open Monday to Saturday, 8:00 AM to 6:00 PM. <a href="#order">Place your order</a></span>
+    <button type="button" id="promo-close" aria-label="Close ad">&times;</button>
+  </div>
+
+  <script type="py" src="./main.py"></script>
+</body>
+</html>
