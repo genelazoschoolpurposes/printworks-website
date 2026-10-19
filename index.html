@@ -98,34 +98,17 @@
         <h2>Place order</h2>
         <label>Full name <input id="name" type="text" autocomplete="name"></label>
         <label>Mobile number <input id="phone" type="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
-        
-        <!-- File Input supporting multiple selection -->
         <label>Files to print (PDF, Word, JPG or PNG, up to 10 MB)
-          <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+          <input id="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
         </label>
-        
-        <!-- Container where the list of attached files & remove buttons appear -->
-        <ul id="file-list" class="file-list" style="list-style: none; padding: 0; margin: 8px 0;"></ul>
-
         <img id="preview" alt="Preview of your file" hidden>
         <p id="file-msg" class="msg" role="status"></p>
-        
         <label>Printing instructions
           <textarea id="notes" rows="2" placeholder="Example: A4, double-sided, 2 copies"></textarea>
         </label>
-
         <label>Claim method
-          <select id="method" py-change="toggle_delivery_address">
-            <option>Pick up in store</option>
-            <option>Delivery</option>
-          </select>
+          <select id="method"><option>Pick up in store</option><option>Delivery</option></select>
         </label>
-        
-        <!-- Delivery Address field (Hidden by default, toggled via main.py) -->
-        <label id="address-label" style="display: none;">Delivery address
-          <textarea id="address" rows="2" placeholder="House/Unit #, Street, Barangay, City"></textarea>
-        </label>
-
         <label class="check"><input id="rush" type="checkbox"> Rush order (+20%)</label>
         <button class="btn" type="submit">Place order</button>
         <p id="order-msg" class="msg" role="status"></p>
