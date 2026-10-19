@@ -6,7 +6,7 @@ Events used:
   timer (asyncio) -> automatic promo ads rotate every few seconds
   mouseenter/leave-> hovering pauses the ads
   click           -> close button hides the bottom promo bar
-  change          -> file picker validates and previews the file to print
+  change / click  -> file pickers add files to a list; Remove deletes one
   click           -> add to order, remove item, track order (event delegation)
   submit          -> order form and contact form with validation
 """
@@ -14,6 +14,7 @@ import time
 import random
 import asyncio
 from datetime import date
+from html import escape
 from pyscript import document, when, window
 
 # ---------- Data ----------
@@ -203,15 +204,17 @@ def on_method_change(event):
     toggle_delivery()
 
 
-# ---------- Files to print (multiple allowed) ----------
+# ---------- Files to print (add as many as you like, one after another) ----------
 MAX_FILES = 10
+picked = {"file": [], "c-file": []}                    # input id -> files chosen so far
+LIST_IDS = {"file": "file-list", "c-file": "c-file-list"}
+MSG_IDS = {"file": "file-msg", "c-file": "c-file-msg"}
 preview_urls = []
 
 
 def get_files(input_id="file"):
-    """Return every file picked in a file input as a list."""
-    files = el(input_id).files
-    return [files.item(i) for i in range(files.length)]
+    """Return every file chosen so far for this input."""
+    return picked[input_id]
 
 
 def validate_file(f):
@@ -234,58 +237,93 @@ def validate_files(files):
     return None
 
 
-def describe_files(files):
-    total_kb = sum(f.size for f in files) / 1024
-    names = ", ".join(str(f.name) for f in files)
-    noun = "file" if len(files) == 1 else "files"
-    return f"Attached {len(files)} {noun} ({total_kb:,.0f} KB): {names}"
-
-
-def clear_preview():
+def render_previews():
+    """Show a thumbnail for every image in the order form's file list."""
     global preview_urls
     for url in preview_urls:
         window.URL.revokeObjectURL(url)
     preview_urls = []
-    el("preview-list").innerHTML = ""
-    el("preview-list").hidden = True
-
-
-@when("change", "#file")
-def on_file_change(event):
-    clear_preview()
-    files = get_files()
-    if not files:
-        show_msg("file-msg", "")
-        return
-    problem = validate_files(files)
-    if problem:
-        show_msg("file-msg", problem, ok=False)
-        el("file").value = ""
-        return
-    show_msg("file-msg", describe_files(files))
-    for f in files:
+    box = el("preview-list")
+    box.innerHTML = ""
+    for f in picked["file"]:
         if str(f.type).startswith("image/"):
             url = window.URL.createObjectURL(f)
             preview_urls.append(url)
             img = document.createElement("img")
             img.src = url
             img.alt = f"Preview of {f.name}"
-            el("preview-list").appendChild(img)
-    el("preview-list").hidden = len(preview_urls) == 0
+            box.appendChild(img)
+    box.hidden = len(preview_urls) == 0
+
+
+def render_files(input_id):
+    """Redraw the list of chosen files (with a Remove button on each)."""
+    files = picked[input_id]
+    rows = ""
+    for i, f in enumerate(files):
+        rows += (f"<li><span>{escape(str(f.name))} <small>({f.size / 1024:,.0f} KB)</small></span>"
+                 f"<button type='button' class='link' data-remove-file='{i}'>Remove</button></li>")
+    el(LIST_IDS[input_id]).innerHTML = rows
+    if input_id == "file":
+        render_previews()
+    if files:
+        total_kb = sum(f.size for f in files) / 1024
+        noun = "file" if len(files) == 1 else "files"
+        show_msg(MSG_IDS[input_id],
+                 f"{len(files)} {noun} attached ({total_kb:,.0f} KB). Click the file button again to add more.")
+    else:
+        show_msg(MSG_IDS[input_id], "")
+
+
+def add_files(input_id):
+    """Add the newly picked files to the list instead of replacing it."""
+    box = el(input_id)
+    new_files = [box.files.item(i) for i in range(box.files.length)]
+    box.value = ""      # lets the client pick the same file again later
+    problems = []
+    for f in new_files:
+        problem = validate_file(f)
+        if problem:
+            problems.append(f"{f.name}: {problem}")
+        elif any(x.name == f.name and x.size == f.size for x in picked[input_id]):
+            continue    # already in the list
+        elif len(picked[input_id]) >= MAX_FILES:
+            problems.append(f"{f.name}: the limit is {MAX_FILES} files.")
+        else:
+            picked[input_id].append(f)
+    render_files(input_id)
+    if problems:
+        show_msg(MSG_IDS[input_id], " ".join(problems), ok=False)
+
+
+def remove_file(input_id, event):
+    button = event.target.closest("button[data-remove-file]")
+    if button is None:
+        return
+    index = int(button.dataset.removeFile)
+    if 0 <= index < len(picked[input_id]):
+        picked[input_id].pop(index)
+    render_files(input_id)
+
+
+@when("change", "#file")
+def on_file_change(event):
+    add_files("file")
 
 
 @when("change", "#c-file")
 def on_contact_file_change(event):
-    files = get_files("c-file")
-    if not files:
-        show_msg("c-file-msg", "")
-        return
-    problem = validate_files(files)
-    if problem:
-        show_msg("c-file-msg", problem, ok=False)
-        el("c-file").value = ""
-    else:
-        show_msg("c-file-msg", describe_files(files))
+    add_files("c-file")
+
+
+@when("click", "#file-list")
+def on_remove_order_file(event):
+    remove_file("file", event)
+
+
+@when("click", "#c-file-list")
+def on_remove_contact_file(event):
+    remove_file("c-file", event)
 
 
 @when("submit", "#order-form")
@@ -343,11 +381,10 @@ def on_order_submit(event):
         el("phone").value = ""
         el("rush").checked = False
         el("notes").value = ""
-        el("file").value = ""
         el("method").value = "Pick up in store"
         toggle_delivery()   # hides and clears the delivery fields
-        clear_preview()
-        show_msg("file-msg", "")
+        picked["file"].clear()
+        render_files("file")
         render_cart()
 
 
@@ -392,8 +429,8 @@ def on_contact_submit(event):
         show_msg("contact-msg", f"Message sent. We will reply to {email} soon.{extra}")
         el("c-email").value = ""
         el("c-msg").value = ""
-        el("c-file").value = ""
-        show_msg("c-file-msg", "")
+        picked["c-file"].clear()
+        render_files("c-file")
 
 
 # ---------- Automatic promo ads ----------
