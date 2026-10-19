@@ -2,6 +2,7 @@
 
 Events used:
   input / change  -> live quote calculator, search filter, rush toggle
+  change          -> claim method shows or hides the delivery fields
   timer (asyncio) -> automatic promo ads rotate every few seconds
   mouseenter/leave-> hovering pauses the ads
   click           -> close button hides the bottom promo bar
@@ -12,7 +13,7 @@ Events used:
 import time
 import random
 import asyncio
-from html import escape
+from datetime import date
 from pyscript import document, when, window
 
 # ---------- Data ----------
@@ -186,64 +187,105 @@ def on_rush_toggle(event):
     render_cart()
 
 
-# ---------- File to print ----------
-preview_url = None
+# ---------- Claim method: pick up or delivery ----------
+def toggle_delivery():
+    """Show the delivery fields only when Delivery is selected."""
+    is_delivery = el("method").value == "Delivery"
+    el("delivery-fields").hidden = not is_delivery
+    if not is_delivery:
+        el("d-address").value = ""
+        el("d-date").value = ""
+        el("d-time").value = ""
 
 
-def get_file(input_id="file"):
+@when("change", "#method")
+def on_method_change(event):
+    toggle_delivery()
+
+
+# ---------- Files to print (multiple allowed) ----------
+MAX_FILES = 10
+preview_urls = []
+
+
+def get_files(input_id="file"):
+    """Return every file picked in a file input as a list."""
     files = el(input_id).files
-    return files.item(0) if files.length > 0 else None
+    return [files.item(i) for i in range(files.length)]
 
 
 def validate_file(f):
-    """Return a problem message, or None if the file is fine."""
+    """Return a problem message for one file, or None if it is fine."""
     if not str(f.name).lower().endswith(ALLOWED_EXT):
         return "That file type isn't supported. Use PDF, Word, JPG or PNG."
     if f.size > MAX_FILE_MB * 1024 * 1024:
-        return f"That file is {f.size / 1024 / 1024:.1f} MB. The limit is {MAX_FILE_MB} MB."
+        return f"That file is {f.size / 1024 / 1024:.1f} MB. The limit is {MAX_FILE_MB} MB per file."
     return None
 
 
+def validate_files(files):
+    """Return a problem message for the whole selection, or None if all are fine."""
+    if len(files) > MAX_FILES:
+        return f"You picked {len(files)} files. The limit is {MAX_FILES} at a time."
+    for f in files:
+        problem = validate_file(f)
+        if problem:
+            return f"{f.name}: {problem}"
+    return None
+
+
+def describe_files(files):
+    total_kb = sum(f.size for f in files) / 1024
+    names = ", ".join(str(f.name) for f in files)
+    noun = "file" if len(files) == 1 else "files"
+    return f"Attached {len(files)} {noun} ({total_kb:,.0f} KB): {names}"
+
+
 def clear_preview():
-    global preview_url
-    el("preview").hidden = True
-    if preview_url:
-        window.URL.revokeObjectURL(preview_url)
-        preview_url = None
+    global preview_urls
+    for url in preview_urls:
+        window.URL.revokeObjectURL(url)
+    preview_urls = []
+    el("preview-list").innerHTML = ""
+    el("preview-list").hidden = True
 
 
 @when("change", "#file")
 def on_file_change(event):
-    global preview_url
     clear_preview()
-    f = get_file()
-    if f is None:
+    files = get_files()
+    if not files:
         show_msg("file-msg", "")
         return
-    problem = validate_file(f)
+    problem = validate_files(files)
     if problem:
         show_msg("file-msg", problem, ok=False)
         el("file").value = ""
         return
-    show_msg("file-msg", f"Attached: {f.name} ({f.size / 1024:,.0f} KB)")
-    if str(f.type).startswith("image/"):
-        preview_url = window.URL.createObjectURL(f)
-        el("preview").src = preview_url
-        el("preview").hidden = False
+    show_msg("file-msg", describe_files(files))
+    for f in files:
+        if str(f.type).startswith("image/"):
+            url = window.URL.createObjectURL(f)
+            preview_urls.append(url)
+            img = document.createElement("img")
+            img.src = url
+            img.alt = f"Preview of {f.name}"
+            el("preview-list").appendChild(img)
+    el("preview-list").hidden = len(preview_urls) == 0
 
 
 @when("change", "#c-file")
 def on_contact_file_change(event):
-    f = get_file("c-file")
-    if f is None:
+    files = get_files("c-file")
+    if not files:
         show_msg("c-file-msg", "")
         return
-    problem = validate_file(f)
+    problem = validate_files(files)
     if problem:
         show_msg("c-file-msg", problem, ok=False)
         el("c-file").value = ""
     else:
-        show_msg("c-file-msg", f"Attached: {f.name} ({f.size / 1024:,.0f} KB)")
+        show_msg("c-file-msg", describe_files(files))
 
 
 @when("submit", "#order-form")
@@ -252,8 +294,13 @@ def on_order_submit(event):
     name = el("name").value.strip()
     phone = el("phone").value.strip()
     digits = "".join(ch for ch in phone if ch.isdigit())
-    f = get_file()
-    file_problem = validate_file(f) if f is not None else None
+    method = el("method").value
+    address = el("d-address").value.strip()
+    d_date = el("d-date").value
+    d_time = el("d-time").value
+    is_delivery = method == "Delivery"
+    files = get_files()
+    file_problem = validate_files(files)
 
     if not cart:
         show_msg("order-msg", "Your order is empty. Add at least one service.", ok=False)
@@ -261,6 +308,14 @@ def on_order_submit(event):
         show_msg("order-msg", "Enter your full name.", ok=False)
     elif len(digits) < 10 or len(digits) > 12:
         show_msg("order-msg", "Enter a valid mobile number, for example 09171234567.", ok=False)
+    elif is_delivery and len(address) < 10:
+        show_msg("order-msg", "Enter your complete delivery address.", ok=False)
+    elif is_delivery and not d_date:
+        show_msg("order-msg", "Choose a delivery date.", ok=False)
+    elif is_delivery and d_date < date.today().isoformat():
+        show_msg("order-msg", "The delivery date can't be in the past.", ok=False)
+    elif is_delivery and not d_time:
+        show_msg("order-msg", "Choose a delivery time.", ok=False)
     elif file_problem:
         show_msg("order-msg", file_problem, ok=False)
     else:
@@ -269,13 +324,19 @@ def on_order_submit(event):
         ref = f"PW-{random.randint(1000, 9999)}"
         while ref in orders:
             ref = f"PW-{random.randint(1000, 9999)}"
-        file_name = str(f.name) if f is not None else None
+        file_names = [str(f.name) for f in files]
         orders[ref] = {"name": name, "placed": time.time(), "rush": rush,
-                       "file": file_name, "notes": el("notes").value.strip()}
-        attached = f"File attached: {file_name}. " if file_name else ""
+                       "files": file_names, "notes": el("notes").value.strip(),
+                       "method": method, "address": address,
+                       "d_date": d_date, "d_time": d_time}
+        attached = f"Files attached: {', '.join(file_names)}. " if file_names else ""
+        if is_delivery:
+            how = f"Delivery to {address} on {d_date} at {d_time}."
+        else:
+            how = "Pick up in store."
         show_msg("order-msg",
                  f"Thank you, {name}! Order {ref} is received. Total: {money(total)}. "
-                 f"{el('method').value}. {attached}"
+                 f"{how} {attached}"
                  f"Send your file to {CONTACT_EMAIL} and include {ref}.")
         cart.clear()
         el("name").value = ""
@@ -283,6 +344,8 @@ def on_order_submit(event):
         el("rush").checked = False
         el("notes").value = ""
         el("file").value = ""
+        el("method").value = "Pick up in store"
+        toggle_delivery()   # hides and clears the delivery fields
         clear_preview()
         show_msg("file-msg", "")
         render_cart()
@@ -303,7 +366,10 @@ def on_track(event):
     elif elapsed < step * 3:
         status = "Printing."
     else:
-        status = "Ready for pickup or delivery."
+        if order["method"] == "Delivery":
+            status = f"Out for delivery to {order['address']} on {order['d_date']} at {order['d_time']}."
+        else:
+            status = "Ready for pickup."
     show_msg("track-msg", f"{ref} for {order['name']}: {status}")
 
 
@@ -312,8 +378,8 @@ def on_contact_submit(event):
     event.preventDefault()
     email = el("c-email").value.strip()
     message = el("c-msg").value.strip()
-    f = get_file("c-file")
-    file_problem = validate_file(f) if f is not None else None
+    files = get_files("c-file")
+    file_problem = validate_files(files)
     if "@" not in email or "." not in email.split("@")[-1]:
         show_msg("contact-msg", "Enter a valid email address.", ok=False)
     elif len(message) < 5:
@@ -321,8 +387,9 @@ def on_contact_submit(event):
     elif file_problem:
         show_msg("contact-msg", file_problem, ok=False)
     else:
-        extra = f" File attached: {escape(str(f.name))}. Please also email it to {CONTACT_EMAIL}." if f is not None else ""
-        show_msg("contact-msg", f"Message sent. We will reply to {escape(email)} soon.{extra}")
+        names = ", ".join(str(f.name) for f in files)
+        extra = f" Files attached: {names}. Please also email them to {CONTACT_EMAIL}." if files else ""
+        show_msg("contact-msg", f"Message sent. We will reply to {email} soon.{extra}")
         el("c-email").value = ""
         el("c-msg").value = ""
         el("c-file").value = ""
@@ -405,6 +472,8 @@ try:
     render_services()
     render_calc()
     render_cart()
+    el("d-date").min = date.today().isoformat()   # no past dates in the picker
+    toggle_delivery()                              # correct state on page load
     render_ad()
     asyncio.ensure_future(ad_loop())
     el("py-status").hidden = True
