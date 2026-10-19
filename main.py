@@ -206,9 +206,9 @@ def on_method_change(event):
 
 # ---------- Files to print (add as many as you like, one after another) ----------
 MAX_FILES = 10
-picked = {"file": [], "c-file": []}                    # input id -> files chosen so far
-LIST_IDS = {"file": "file-list", "c-file": "c-file-list"}
-MSG_IDS = {"file": "file-msg", "c-file": "c-file-msg"}
+picked = {"file": []}                                  # input id -> files chosen so far
+LIST_IDS = {"file": "file-list"}
+MSG_IDS = {"file": "file-msg"}
 preview_urls = []
 
 
@@ -311,19 +311,9 @@ def on_file_change(event):
     add_files("file")
 
 
-@when("change", "#c-file")
-def on_contact_file_change(event):
-    add_files("c-file")
-
-
 @when("click", "#file-list")
 def on_remove_order_file(event):
     remove_file("file", event)
-
-
-@when("click", "#c-file-list")
-def on_remove_contact_file(event):
-    remove_file("c-file", event)
 
 
 @when("submit", "#order-form")
@@ -415,22 +405,14 @@ def on_contact_submit(event):
     event.preventDefault()
     email = el("c-email").value.strip()
     message = el("c-msg").value.strip()
-    files = get_files("c-file")
-    file_problem = validate_files(files)
     if "@" not in email or "." not in email.split("@")[-1]:
         show_msg("contact-msg", "Enter a valid email address.", ok=False)
     elif len(message) < 5:
         show_msg("contact-msg", "Write a message of at least 5 characters.", ok=False)
-    elif file_problem:
-        show_msg("contact-msg", file_problem, ok=False)
     else:
-        names = ", ".join(str(f.name) for f in files)
-        extra = f" Files attached: {names}. Please also email them to {CONTACT_EMAIL}." if files else ""
-        show_msg("contact-msg", f"Message sent. We will reply to {email} soon.{extra}")
+        show_msg("contact-msg", f"Message sent. We will reply to {email} soon.")
         el("c-email").value = ""
         el("c-msg").value = ""
-        picked["c-file"].clear()
-        render_files("c-file")
 
 
 # ---------- Automatic promo ads ----------
