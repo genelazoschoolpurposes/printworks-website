@@ -78,7 +78,6 @@ def add_to_cart(event=None):
     document.getElementById("calc-msg").innerText = "Added to your order!"
 
 def remove_from_cart(event):
-    # Retrieve index from data attribute safely
     idx_str = event.target.getAttribute("data-index")
     if idx_str is not None:
         idx = int(idx_str)
@@ -113,7 +112,6 @@ def render_cart():
 # --- Multi-File Upload & Removal ---
 def handle_file_upload(event):
     files = document.getElementById("file").files
-    file_list_elem = document.getElementById("file-list")
     file_msg = document.getElementById("file-msg")
     
     if not files:
@@ -218,11 +216,6 @@ def main():
 
     # File upload listener
     document.getElementById("file").addEventListener("change", handle_file_upload)
-
-    # Claim method dropdown listener for Delivery Address toggle
-    method_elem = document.getElementById("method")
-    if method_elem:
-        method_elem.addEventListener("change", toggle_delivery_address)
 
     # Order form submission
     document.getElementById("order-form").addEventListener("submit", submit_order)
