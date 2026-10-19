@@ -1,7 +1,7 @@
 """PrintWorks - event-driven logic written in PyScript.
 
 Events used:
-  input / change  -> live quote calculator, search filter, rush toggle
+  input / change  -> live quote calculator, search filter, rush toggle, claim method toggle
   timer (asyncio) -> automatic promo ads rotate every few seconds
   mouseenter/leave-> hovering pauses the ads
   click           -> close button hides the bottom promo bar
@@ -209,6 +209,19 @@ def on_rush_toggle(event):
     render_cart()
 
 
+@when("change", "#method")
+def on_method_change(event):
+    """Show or hide delivery address depending on claim method choice."""
+    method = el("method").value
+    addr_label = el("address-label")
+    if addr_label:
+        if "Delivery" in method:
+            addr_label.style.display = "block"
+        else:
+            addr_label.style.display = "none"
+            el("address").value = ""
+
+
 # ---------- File to print ----------
 def validate_file(f):
     """Return a problem message, or None if the file is fine."""
@@ -281,6 +294,8 @@ def on_order_submit(event):
     name = el("name").value.strip()
     phone = el("phone").value.strip()
     digits = "".join(ch for ch in phone if ch.isdigit())
+    method = el("method").value
+    address = el("address").value.strip()
 
     if not cart:
         show_msg("order-msg", "Your order is empty. Add at least one service.", ok=False)
@@ -288,6 +303,8 @@ def on_order_submit(event):
         show_msg("order-msg", "Enter your full name.", ok=False)
     elif len(digits) < 10 or len(digits) > 12:
         show_msg("order-msg", "Enter a valid mobile number, for example 09171234567.", ok=False)
+    elif "Delivery" in method and len(address) < 5:
+        show_msg("order-msg", "Please enter a complete delivery address.", ok=False)
     else:
         rush = el("rush").checked
         total = compute(cart_subtotal(), rush)[2]
@@ -301,14 +318,17 @@ def on_order_submit(event):
             "placed": time.time(), 
             "rush": rush,
             "files": file_names, 
-            "notes": el("notes").value.strip()
+            "notes": el("notes").value.strip(),
+            "method": method,
+            "address": address if "Delivery" in method else "Pick up in store"
         }
         
-        attached = f"{len(file_names)} file(s) attached ({', '.join(file_names)}). " if file_names else "No files attached. "
+        attached = f"{len(file_names)} file(s) attached. " if file_names else "No files attached. "
+        delivery_info = f" To be delivered to: {address}." if "Delivery" in method else " For store pickup."
+        
         show_msg("order-msg",
                  f"Thank you, {name}! Order {ref} is received. Total: {money(total)}. "
-                 f"{el('method').value}. {attached}"
-                 f"Send your files to {CONTACT_EMAIL} and include {ref}.")
+                 f"{attached}{delivery_info} Send files to {CONTACT_EMAIL} with ref {ref}.")
         
         # Reset form & state
         cart.clear()
@@ -320,6 +340,9 @@ def on_order_submit(event):
         el("rush").checked = False
         el("notes").value = ""
         el("file").value = ""
+        el("address").value = ""
+        el("address-label").style.display = "none"
+        el("method").value = "Pick up in store"
         show_msg("file-msg", "")
         render_cart()
 
