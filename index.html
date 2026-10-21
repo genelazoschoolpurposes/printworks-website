@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
   <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=7">
   <style>
     /* Delivery fields and file list (you can move this into style.css if you prefer) */
     [hidden] { display: none !important; }
@@ -55,20 +55,13 @@
       </form>
     </section>
 
-    <section id="ads" aria-label="Promotions">
-      <div id="ad-banner" data-tone="cyan">
-        <small class="ad-tag">Ad</small>
-        <div id="ad-slide">
-          <h2>Student special</h2>
-          <p>Thesis and reports, printed clean and ready to bind.</p>
-          <button class="btn" data-ad="0">Add 100 page for ₱200.00</button>
-        </div>
-        <div id="ad-dots">
-          <button data-dot="0" class="on" aria-label="Show ad 1"></button>
-          <button data-dot="1" aria-label="Show ad 2"></button>
-          <button data-dot="2" aria-label="Show ad 3"></button>
-          <button data-dot="3" aria-label="Show ad 4"></button>
-        </div>
+    <section id="ads" aria-label="PrintWorks promotional video">
+      <p class="video-label">Promotional video</p>
+      <div id="promo-video-wrap">
+        <video id="promo-video" controls autoplay muted loop playsinline preload="metadata" poster="poster.jpg">
+          <source src="promo.mp4" type="video/mp4">
+          Your browser can't play this video.
+        </video>
       </div>
       <p id="ad-msg" class="msg" role="status"></p>
     </section>
@@ -192,6 +185,6 @@
     })();
   </script>
 
-  <script type="py" src="./main.py?v=6"></script>
+  <script type="py" src="./main.py?v=7"></script>
 </body>
 </html>
