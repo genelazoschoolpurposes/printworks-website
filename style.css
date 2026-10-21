@@ -340,3 +340,8 @@ input[type="file"]::file-selector-button:hover { background: var(--cyan); }
 #promo-close:hover { background: rgba(255, 255, 255, .14); }
 footer { padding-bottom: 5rem; }
 .ad-tag { position: absolute; top: .7rem; right: .9rem; font-size: .75rem; letter-spacing: .04em; color: var(--muted); }
+
+/* Promotional video in the ads area (the old blue banner spot) */
+.video-label { max-width: 960px; margin: 0 auto .5rem; font-size: .85rem; color: var(--muted); }
+#promo-video-wrap { max-width: 960px; margin: 0 auto; border: 2px solid var(--ink); background: #000; }
+#promo-video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; }
