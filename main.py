@@ -493,8 +493,9 @@ try:
     render_cart()
     el("d-date").min = date.today().isoformat()   # no past dates in the picker
     toggle_delivery()                              # correct state on page load
-    render_ad()
-    asyncio.ensure_future(ad_loop())
+    if el("ad-banner") is not None:               # the old rotating banner was replaced by the video
+        render_ad()
+        asyncio.ensure_future(ad_loop())
     el("py-status").hidden = True
 except Exception as error:
     el("py-status").textContent = f"The interactive features failed to load: {error}"
